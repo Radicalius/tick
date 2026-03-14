@@ -5,6 +5,7 @@ import (
 	"fmt"
 	tickv1 "tick/gen"
 	"tick/gen/tickv1connect"
+	"time"
 )
 
 type TickServiceServer struct {
@@ -12,10 +13,15 @@ type TickServiceServer struct {
 }
 
 func (t *TickServiceServer) QueueTask(context context.Context, request *tickv1.QueueTaskRequest) (*tickv1.QueueTaskResponse, error) {
+	var parent *int64 = nil
+	if request.ParentId != 0 {
+		parent = &request.ParentId
+	}
 	err := db.Create(&TaskDAL{
-		Name:       request.Task.TaskName,
-		Parameters: request.Task.Parameters,
+		Name:       request.TaskName,
+		Parameters: request.Parameters,
 		Queue:      request.QueueName,
+		SubtaskOf:  parent,
 	}).Error
 	if err != nil {
 		return nil, err
@@ -76,6 +82,7 @@ func (t *TickServiceServer) GetTask(context context.Context, request *tickv1.Get
 
 	return &tickv1.GetTaskResponse{
 		Task: &tickv1.Task{
+			TaskId:     int64(task.ID),
 			TaskName:   task.Name,
 			Parameters: request.Parameters,
 			Result:     task.Result,
@@ -84,6 +91,52 @@ func (t *TickServiceServer) GetTask(context context.Context, request *tickv1.Get
 	}, nil
 }
 
-func (t *TickServiceServer) PollTaskQueue(context.Context, *tickv1.PollTaskQueueRequest) (*tickv1.PollTaskQueueResponse, error) {
+func (t *TickServiceServer) PollTaskQueue(context context.Context, request *tickv1.PollTaskQueueRequest) (*tickv1.PollTaskQueueResponse, error) {
+	// query for the elements where:
+	// 1. queuename matches
+	// 2. is pending
+	// -- 3. is not reserved
+	// ordered by creation time desc.
+	// paginate through and find the first element which is not reserved and is not the parent of a pending task
+
+	var tasks []TaskDAL
+	err := db.Where("queue = ? and status = ?", request.QueueName, TASK_STATUS_PENDING).
+		Order("created_at DESC").
+		Offset(0).
+		Limit(100).
+		Find(&tasks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	time.Now().Add(-1 * time.Minute)
+
+	seen_parents := make(map[int64]bool)
+	for _, task := range tasks {
+		if task.SubtaskOf != nil {
+			seen_parents[*task.SubtaskOf] = true
+		}
+
+		if task.ReservedAt != nil && time.Now().Add(-1*time.Minute).Compare(*task.ReservedAt) == -1 {
+			continue
+		}
+
+		if exists, _ := seen_parents[int64(task.ID)]; exists {
+			continue
+		}
+
+		if err := db.Model(&task).Update("reserved_at", time.Now()).Error; err != nil {
+			return nil, err
+		}
+
+		return &tickv1.PollTaskQueueResponse{
+			Task: &tickv1.Task{
+				TaskId:     int64(task.ID),
+				TaskName:   task.Name,
+				Parameters: task.Parameters,
+			},
+		}, nil
+	}
+
 	return &tickv1.PollTaskQueueResponse{}, nil
 }

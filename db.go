@@ -41,7 +41,7 @@ type TaskDAL struct {
 
 	Queue      string
 	ReservedAt *time.Time
-	SubtaskOf  *int
+	SubtaskOf  *int64
 }
 
 var db *gorm.DB
