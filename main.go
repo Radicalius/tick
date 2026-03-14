@@ -21,8 +21,11 @@ func main() {
 	path, handler := tickv1connect.NewTickHandler(&TickServiceServer{})
 	mux.Handle(path, handler)
 	fmt.Println("... Listening on", address)
-	http.ListenAndServe(
+	err := http.ListenAndServe(
 		address,
 		h2c.NewHandler(mux, &http2.Server{}),
 	)
+	if err != nil {
+		log.Fatalf("error starting server: %s", err.Error())
+	}
 }

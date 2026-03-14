@@ -1,3 +1,5 @@
 gen/
 tick
-tick.exe
+*.exe
+*.exe~
+*.db
