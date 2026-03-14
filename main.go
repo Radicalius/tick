@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"tick/gen/tickv1connect"
 
@@ -12,6 +13,10 @@ import (
 const address = "localhost:8080"
 
 func main() {
+	if err := InitDatabase(); err != nil {
+		log.Fatalf("error initializing the database: %s", err.Error())
+	}
+
 	mux := http.NewServeMux()
 	path, handler := tickv1connect.NewTickHandler(&TickServiceServer{})
 	mux.Handle(path, handler)
