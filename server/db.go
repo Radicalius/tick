@@ -1,8 +1,6 @@
 package main
 
 import (
-	"database/sql/driver"
-	"encoding/json"
 	"log"
 	"os"
 	"time"
@@ -11,16 +9,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
-
-type JSONMap map[string]string
-
-func (j JSONMap) Value() (driver.Value, error) {
-	return json.Marshal(j)
-}
-
-func (j *JSONMap) Scan(value interface{}) error {
-	return json.Unmarshal(value.([]byte), j)
-}
 
 type TaskStatusDAL int
 
@@ -35,7 +23,7 @@ type TaskDAL struct {
 	gorm.Model
 
 	Name       string
-	Parameters JSONMap `gorm:"type:text"`
+	Parameters string
 	Result     string
 	Status     TaskStatusDAL `gorm:"default:2"`
 

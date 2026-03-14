@@ -12,7 +12,7 @@ service Tick {
 message QueueTaskRequest {
   string queue_name = 1;
   string task_name = 2;
-  map<string, string> parameters = 3;
+  string parameters = 3;
   int64 parent_id = 4;
 }
 
@@ -28,7 +28,7 @@ message ResolveTaskResponse {}
 
 message GetTaskRequest {
   string task_name = 1;
-  map<string, string> parameters = 2;
+  string parameters = 2;
 }
 
 message GetTaskResponse {
@@ -53,7 +53,7 @@ enum TaskStatus {
 message Task {
   int64 task_id = 1;
   string task_name = 2;
-  map<string, string> parameters = 3;
+  string parameters = 3;
   string result = 4;
   TaskStatus status = 5;
 }
