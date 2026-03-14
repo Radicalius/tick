@@ -92,13 +92,6 @@ func (t *TickServiceServer) GetTask(context context.Context, request *tickv1.Get
 }
 
 func (t *TickServiceServer) PollTaskQueue(context context.Context, request *tickv1.PollTaskQueueRequest) (*tickv1.PollTaskQueueResponse, error) {
-	// query for the elements where:
-	// 1. queuename matches
-	// 2. is pending
-	// -- 3. is not reserved
-	// ordered by creation time desc.
-	// paginate through and find the first element which is not reserved and is not the parent of a pending task
-
 	var tasks []TaskDAL
 	err := db.Where("queue = ? and status = ?", request.QueueName, TASK_STATUS_PENDING).
 		Order("created_at DESC").
