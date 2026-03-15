@@ -12,7 +12,7 @@ import (
 )
 
 var client tickv1connect.TickClient
-var handlerRegistry map[string]func(*tickv1.Task) (string, error)
+var handlerRegistry map[string]func(*tickv1.Task) (string, error) = make(map[string]func(*tickv1.Task) (string, error))
 
 func RegisterTaskHandler[I any, O any](name string, handler func(*tickv1.Task, I) (*O, error)) {
 	handlerRegistry[name] = func(t *tickv1.Task) (string, error) {
@@ -84,10 +84,14 @@ func execTask(task *tickv1.Task) error {
 		var err error
 		result, err = handler(task)
 		if err != nil {
-			result = err.Error()
+			if strings.Contains(err.Error(), "task execution deferred") {
+				status = tickv1.TaskStatus_PENDING
+			} else {
+				result = err.Error()
+			}
+		} else {
+			status = tickv1.TaskStatus_SUCCESS
 		}
-
-		status = tickv1.TaskStatus_SUCCESS
 	} else {
 		result = "task not registered"
 	}
@@ -122,10 +126,6 @@ func Run(addr string, queueName string) error {
 
 		err = execTask(res.Task)
 		if err != nil {
-			if strings.Contains(err.Error(), "task execution deferred") {
-				continue
-			}
-
 			return err
 		}
 	}

@@ -46,13 +46,18 @@ func (t *TickServiceServer) ResolveTask(context context.Context, request *tickv1
 		translatedStatus = TaskStatusDAL(TASK_STATUS_FAILURE)
 	case tickv1.TaskStatus_SUCCESS:
 		translatedStatus = TaskStatusDAL(TASK_STATUS_SUCCESS)
+	case tickv1.TaskStatus_PENDING:
+		translatedStatus = TaskStatusDAL(TASK_STATUS_PENDING)
 	default:
 		return nil, fmt.Errorf("invalid task status: %d", request.Status)
 	}
 
+	fmt.Printf("translated status: %d\n", translatedStatus)
+
 	err := db.Model(&task).Updates(map[string]interface{}{
-		"result": request.Result,
-		"status": translatedStatus,
+		"result":      request.Result,
+		"status":      translatedStatus,
+		"reserved_at": nil,
 	}).Error
 
 	if err != nil {
