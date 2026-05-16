@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
+	"runtime"
 	"strings"
 	tickv1 "tick/gen"
 	"tick/gen/tickv1connect"
@@ -14,7 +16,10 @@ import (
 var client tickv1connect.TickClient
 var handlerRegistry map[string]func(*tickv1.Task) (string, error) = make(map[string]func(*tickv1.Task) (string, error))
 
-func RegisterTaskHandler[I any, O any](name string, handler func(*tickv1.Task, I) (*O, error)) {
+func RegisterTaskHandler[I any, O any](handler func(*tickv1.Task, I) (*O, error)) {
+	name := getName(handler)
+	fmt.Println(name)
+
 	handlerRegistry[name] = func(t *tickv1.Task) (string, error) {
 		var input I
 		if err := json.Unmarshal([]byte(t.Parameters), &input); err != nil {
@@ -45,7 +50,9 @@ func Parallel(errs ...error) error {
 	return nil
 }
 
-func ExecTask[I any, O any](parent *tickv1.Task, name string, parameter I, output *O) error {
+func ExecTask[I any, O any](parent *tickv1.Task, task any, parameter I, output *O) error {
+	name := getName(task)
+
 	paramStr, err := json.Marshal(parameter)
 	if err != nil {
 		return err
@@ -138,4 +145,11 @@ func Run(addr string, queueName string) error {
 			return err
 		}
 	}
+}
+
+func getName(fn any) string {
+	pc := reflect.ValueOf(fn).Pointer()
+	name := runtime.FuncForPC(pc).Name()
+	parts := strings.Split(name, ".")
+	return parts[len(parts)-1]
 }
