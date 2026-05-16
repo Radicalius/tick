@@ -35,10 +35,20 @@ func RegisterTaskHandler[I any, O any](name string, handler func(*tickv1.Task, I
 	}
 }
 
-func ExecTask[I any, O any](parent *tickv1.Task, name string, parameter I) (*O, error) {
+func Parallel(errs ...error) error {
+	for _, err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ExecTask[I any, O any](parent *tickv1.Task, name string, parameter I, output *O) error {
 	paramStr, err := json.Marshal(parameter)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	res, err := client.GetTask(context.Background(), &tickv1.GetTaskRequest{
@@ -54,25 +64,24 @@ func ExecTask[I any, O any](parent *tickv1.Task, name string, parameter I) (*O, 
 				ParentId:   parent.TaskId,
 			})
 			if err != nil {
-				return nil, err
+				return err
 			}
 
-			return nil, fmt.Errorf("task execution deferred")
+			return fmt.Errorf("task execution deferred")
 		}
 
-		return nil, err
+		return err
 	}
 
 	if res.Task.Status == tickv1.TaskStatus_SUCCESS {
-		var output O
-		if err := json.Unmarshal([]byte(res.Task.Result), &output); err != nil {
-			return nil, err
+		if err := json.Unmarshal([]byte(res.Task.Result), output); err != nil {
+			return err
 		}
 
-		return &output, nil
+		return nil
 	}
 
-	return nil, fmt.Errorf("task execution deferred")
+	return fmt.Errorf("task execution deferred")
 }
 
 func execTask(task *tickv1.Task) error {

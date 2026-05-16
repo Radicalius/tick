@@ -3,3 +3,5 @@ tick
 *.exe
 *.exe~
 *.db
+server/server
+test/test
