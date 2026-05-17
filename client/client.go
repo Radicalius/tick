@@ -68,6 +68,7 @@ func ExecTask[I any, O any](ctx *Context, task any, parameter I, output *O) erro
 	res, err := client.GetTask(context.Background(), &tickv1.GetTaskRequest{
 		TaskName:   name,
 		Parameters: string(paramStr),
+		ParentId:   ctx.Task.TaskId,
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "record not found") {

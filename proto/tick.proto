@@ -29,6 +29,7 @@ message ResolveTaskResponse {}
 message GetTaskRequest {
   string task_name = 1;
   string parameters = 2;
+  int64 parent_id = 3;
 }
 
 message GetTaskResponse {

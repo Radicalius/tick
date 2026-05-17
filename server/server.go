@@ -69,7 +69,7 @@ func (t *TickServiceServer) ResolveTask(context context.Context, request *tickv1
 
 func (t *TickServiceServer) GetTask(context context.Context, request *tickv1.GetTaskRequest) (*tickv1.GetTaskResponse, error) {
 	task := TaskDAL{}
-	if err := db.First(&task, "name = ? and parameters = ?", request.TaskName, request.Parameters).Error; err != nil {
+	if err := db.First(&task, "name = ? and parameters = ? and (subtask_of = ? or ? = 0)", request.TaskName, request.Parameters, request.ParentId, request.ParentId).Error; err != nil {
 		return nil, err
 	}
 
