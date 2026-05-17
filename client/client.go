@@ -16,9 +16,12 @@ import (
 var client tickv1connect.TickClient
 var handlerRegistry map[string]func(*tickv1.Task) (string, error) = make(map[string]func(*tickv1.Task) (string, error))
 
-func RegisterTaskHandler[I any, O any](handler func(*tickv1.Task, I) (*O, error)) {
+type Context struct {
+	Task *tickv1.Task
+}
+
+func RegisterTaskHandler[I any, O any](handler func(*Context, I) (*O, error)) {
 	name := getName(handler)
-	fmt.Println(name)
 
 	handlerRegistry[name] = func(t *tickv1.Task) (string, error) {
 		var input I
@@ -26,7 +29,11 @@ func RegisterTaskHandler[I any, O any](handler func(*tickv1.Task, I) (*O, error)
 			return "", err
 		}
 
-		out, err := handler(t, input)
+		context := Context{
+			Task: t,
+		}
+
+		out, err := handler(&context, input)
 		if err != nil {
 			return "", err
 		}
@@ -50,7 +57,7 @@ func Parallel(errs ...error) error {
 	return nil
 }
 
-func ExecTask[I any, O any](parent *tickv1.Task, task any, parameter I, output *O) error {
+func ExecTask[I any, O any](ctx *Context, task any, parameter I, output *O) error {
 	name := getName(task)
 
 	paramStr, err := json.Marshal(parameter)
@@ -68,7 +75,7 @@ func ExecTask[I any, O any](parent *tickv1.Task, task any, parameter I, output *
 				QueueName:  globalQueueName,
 				TaskName:   name,
 				Parameters: string(paramStr),
-				ParentId:   parent.TaskId,
+				ParentId:   ctx.Task.TaskId,
 			})
 			if err != nil {
 				return err
