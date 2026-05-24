@@ -1,0 +1,40 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [master]
+  pull-request:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Build DockerImage
+        run: docker build -t tick .
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: zacharycotton
+          password: ${{ secrets.DOCKERHUB_PAT }}
+
+      - name: Push DockerImage (Master)
+        if: github.ref == 'refs/heads/master'
+        run: |
+          master_tag="zacharycotton/tick:${{ github.sha }}"
+          latest_tag="zacharycotton/tick:latest"
+
+          docker tag tick $master_tag
+          docker tag tick $latest_tag
+          docker push $master_tag
+          docker push $latest_tag
+
+      - name: Push DockerImage (PR)
+        if: github.ref != 'refs/heads/master'
+        run: |
+          pr_tag="zacharycotton/tick:pr-${{ github.sha }}"
+          docker tag tick $pr_tag
+          docker push $pr_tag
