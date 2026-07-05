@@ -17,6 +17,8 @@ func main() {
 		log.Fatalf("error initializing the database: %s", err.Error())
 	}
 
+	go RunMetricsApi()
+
 	mux := http.NewServeMux()
 	path, handler := tickv1connect.NewTickHandler(&TickServiceServer{})
 	mux.Handle(path, handler)
