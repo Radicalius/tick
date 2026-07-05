@@ -18,4 +18,6 @@ FROM alpine AS final
 COPY --from=build /src/server/server /app/server
 WORKDIR /app
 
+RUN mkdir /data
+
 CMD [ "./server" ]

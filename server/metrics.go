@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -196,5 +197,11 @@ func RunMetricsApi() {
 		json.NewEncoder(w).Encode(timeSeries)
 	})
 
-	http.ListenAndServe(":8001", nil)
+	port := os.Getenv("METRICS_PORT")
+	if port == "" {
+		port = "8001"
+	}
+
+	address := fmt.Sprintf(":%s", port)
+	http.ListenAndServe(address, nil)
 }

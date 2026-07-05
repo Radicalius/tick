@@ -45,8 +45,13 @@ func InitDatabase() error {
 		},
 	)
 
+	dbPath := os.Getenv("DATABASE_PATH")
+	if dbPath == "" {
+		dbPath = "/data/tick.db"
+	}
+
 	var err error
-	db, err = gorm.Open(sqlite.Open("tick.db"), &gorm.Config{
+	db, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
