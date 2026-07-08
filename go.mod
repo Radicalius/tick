@@ -1,4 +1,4 @@
-module tick
+module github.com/Radicalius/tick
 
 go 1.25.0
 
