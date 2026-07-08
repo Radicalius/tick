@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	tickv1 "tick/gen"
-	"tick/gen/tickv1connect"
 	"time"
+
+	tickv1 "github.com/Radicalius/tick/gen"
+	"github.com/Radicalius/tick/gen/tickv1connect"
 )
 
 type TickServiceServer struct {

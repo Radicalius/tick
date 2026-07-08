@@ -8,9 +8,10 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
-	tickv1 "tick/gen"
-	"tick/gen/tickv1connect"
 	"time"
+
+	tickv1 "github.com/Radicalius/tick/gen"
+	"github.com/Radicalius/tick/gen/tickv1connect"
 )
 
 var client tickv1connect.TickClient

@@ -2,8 +2,9 @@ package main
 
 import (
 	"log"
-	"tick/client"
 	"time"
+
+	"github.com/Radicalius/tick/client"
 )
 
 type FibannaciWorkflowInput struct {

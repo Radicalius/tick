@@ -5,7 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"tick/gen/tickv1connect"
+
+	"github.com/Radicalius/tick/gen/tickv1connect"
 
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
